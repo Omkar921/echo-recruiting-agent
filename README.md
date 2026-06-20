@@ -2,8 +2,8 @@
 
 **PSVIEW technical test submission** — a mini web app where a company configures its own recruiting agent, sources candidates, runs a live call preview, and receives a post-call scorecard.
 
-**Live demo:** _(add URL after deploy)_  
-**Repo:** _(add GitHub URL after push)_
+**Live demo:** Deploy via Vercel (see below) — import from GitHub and add `ANTHROPIC_API_KEY`  
+**Repo:** https://github.com/Skopusai/echo-recruiting-agent
 
 ---
 
@@ -59,14 +59,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Deploy
+## Deploy (Vercel)
 
-1. Push to GitHub
-2. Import on [Vercel](https://vercel.com)
-3. Add environment variable: `ANTHROPIC_API_KEY`
-4. Deploy
+1. Go to [vercel.com/new](https://vercel.com/new) → **Import** `Skopusai/echo-recruiting-agent`
+2. **Environment variables** → add `ANTHROPIC_API_KEY` (your key from Anthropic console — never commit it)
+3. Click **Deploy**
 
 Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-6`).
+
+Your live URL will look like `https://echo-recruiting-agent.vercel.app`.
 
 ---
 
