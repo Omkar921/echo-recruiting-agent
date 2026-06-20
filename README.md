@@ -1,49 +1,48 @@
 # Écho — Autonomous Recruiting Agent
 
-**PSVIEW technical test submission** — a mini web app where a company configures its own recruiting agent, sources candidates, runs a live call preview, and receives a post-call scorecard.
+**PSVIEW technical test submission.**
 
-**Live demo:** Deploy via Vercel (see below) — import from GitHub and add `ANTHROPIC_API_KEY`  
-**Repo:** https://github.com/Skopusai/echo-recruiting-agent
+**Live demo:** https://echo-recruiting-agent.vercel.app
+**Repo:** https://github.com/Omkar921/echo-recruiting-agent
 
 ---
 
 ## What I built
 
-Écho is an end-to-end recruiting agent demo:
+A company configures its own recruiting agent, then previews it end to end:
 
-1. **Onboarding** — company context (manual or URL auto-fill) → Claude builds company intelligence + a branded agent persona (`{Company}'s Écho`)
-2. **Engagement wizard** — define a role, pick call type (intro / assessment / technical), source mock candidates, select one
-3. **Live call preview** — you play the candidate; the agent speaks (TTS), listens (STT), and shows deterministic reasoning per turn
-4. **Post-call report** — call-type-specific scorecard (e.g. English & confidence for intro; tech depth for technical) with next-round likelihood
+1. **Onboarding** — company context → Claude builds company intelligence and a branded agent persona (`{Company}'s Écho`)
+2. **Engagement wizard** — pick a role and call type (intro / assessment / technical), select a candidate
+3. **Live call preview** — you play the candidate; the agent speaks (TTS), listens (STT), and shows its reasoning per turn
+4. **Post-call report** — a call-type-specific scorecard with a next-round likelihood
 
-Session state persists in the browser so you can navigate away and resume.
-
----
-
-## Key design choices
-
-| Choice | Why |
-|--------|-----|
-| **Deterministic agent engine + one LLM write per turn** | Strategy (classify, phase, next beat, status) is code-owned; Claude only writes the message — not a single prompt chain |
-| **Call-purpose policies** | Intro, assessment, and technical calls follow different phase guides, scoring dimensions, and wrap-up rules |
-| **3–4 exchange cap** | Keeps the demo focused; agent winds down and closes naturally |
-| **Branded agent from company name** | Persona is traits/voice only; display name is always `{Company}'s Écho` |
-| **Server-side API routes** | All Claude calls run on the server; API key never reaches the browser |
-| **Zustand + localStorage** | Lightweight session persistence without a database for this scope |
+Nothing is sent for real. Session state persists in the browser.
 
 ---
 
-## What makes the agent intelligent (not just an LLM call)
+## How this maps to the brief
 
-> **The agent decides *what* to do next in code — classify the reply, update candidate memory, pick the conversation phase and beat — and uses Claude only once per turn to *write* the words.**
-
-See `lib/agent/engine.ts` (0 LLM calls) + `lib/agent/orchestrator.ts` (1 write call).
+| Requirement | Where it lives |
+|---|---|
+| **Autonomous** — context + intent, no step-by-step driving | One company context + one role/call-type input is all you give it. Sourcing, sequencing, and the live conversation all run without further input. |
+| **Personality stays consistent, changes when configured differently** | Persona is generated once per company (`{Company}'s Écho`) and reused as a fixed identity on every later call — a different company produces a visibly different agent. |
+| **Knows the company** | Company intelligence from onboarding is threaded through every call — persona generation, message writing, and live reasoning all reference it. |
+| **Reasons — not just text generation** | `lib/agent/engine.ts` decides classification, conversation phase, and next action in code, before Claude is ever called. That decision is shown live in the reasoning panel each turn — not inferred from the reply text after the fact. |
+| **Deployed, usable without us** | Live on Vercel. No setup, no API key required from whoever's reviewing it. |
 
 ---
 
-## Stack
+## Key choices
 
-Next.js 16 · React 19 · Tailwind 4 · Anthropic Claude · Zustand · Web Speech API
+- **Deterministic agent engine, one LLM call per turn.** Classification, conversation phase, and next action are decided in code (`lib/agent/engine.ts`) — Claude is called once per turn, only to write the message for a decision that's already been made.
+- **Call-purpose policies.** Intro, assessment, and technical calls each follow their own phase guide and scoring dimensions.
+- **No database.** Zustand + localStorage — appropriate for a single-session preview tool, and means it works the instant it's deployed.
+
+---
+
+## What makes the agent intelligent — not just an LLM call
+
+> The agent decides *what* to do next in code — classifying the reply, updating candidate memory, choosing the phase and next beat — and calls Claude exactly once per turn, only to write the words for a decision already made.
 
 ---
 
@@ -54,32 +53,3 @@ npm install
 cp .env.example .env.local   # add your ANTHROPIC_API_KEY
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000).
-
----
-
-## Deploy (Vercel)
-
-1. Go to [vercel.com/new](https://vercel.com/new) → **Import** `Skopusai/echo-recruiting-agent`
-2. **Environment variables** → add `ANTHROPIC_API_KEY` (your key from Anthropic console — never commit it)
-3. Click **Deploy**
-
-Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-6`).
-
-Your live URL will look like `https://echo-recruiting-agent.vercel.app`.
-
----
-
-## Project structure
-
-| Path | Purpose |
-|------|---------|
-| `app/onboarding/` | Company setup → build persona |
-| `app/dashboard/agent/` | Role wizard, sourcing, live call, report |
-| `lib/agent/engine.ts` | Deterministic turn logic |
-| `lib/agent/orchestrator.ts` | Agent class + LLM write calls |
-| `lib/agent/report.ts` | Post-call scorecard generation |
-| `lib/session/store.ts` | Client session & engagement draft |
-
-More detail: [ARCHITECTURE.md](./ARCHITECTURE.md)
